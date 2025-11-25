@@ -1,14 +1,22 @@
 #!/bin/bash
 
-echo "=== Torrent-Fox Installer ==="
+echo "Installing Torrent-Fox..."
 
-apt update -y
-apt install -y curl jq iptables
+apt update
+apt install -y python3 ipset
 
-# Download the main Torrent-Fox script
-curl -o /usr/local/bin/torrent-fox https://raw.githubusercontent.com/Torrent-Fox/Torrent-Fox/main/torrent-fox.sh
-chmod +x /usr/local/bin/torrent-fox
+ipset create torrent_block hash:ip -exist
 
-echo ""
+mkdir -p /usr/local/torrent-fox
+cp -r core /usr/local/torrent-fox/
+cp torrent-fox.sh /usr/bin/torrent-fox
+chmod +x /usr/bin/torrent-fox
+
+cp service/torrent-fox.service /etc/systemd/system/torrent-fox.service
+
+systemctl daemon-reload
+systemctl enable torrent-fox
+systemctl start torrent-fox
+
 echo "Torrent-Fox installed successfully!"
-echo "Run it with: torrent-fox"
+echo "Run with: torrent-fox"
