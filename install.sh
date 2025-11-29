@@ -1,27 +1,48 @@
 #!/bin/bash
 
-echo "Installing Torrent-Fox..."
+clear
+echo "==============================="
+echo "         Torrent-Fox           "
+echo "==============================="
 
-# Update packages
-apt update -y
+menu() {
+echo ""
+echo "1) Enable Torrent Block"
+echo "2) Disable Torrent Block"
+echo "3) Check Status"
+echo "4) Exit"
+echo ""
+read -p 'Select option: ' opt
 
-# Install Python
-apt install -y python3 python3-pip
+case $opt in
+1) enable ;;
+2) disable ;;
+3) status ;;
+4) exit ;;
+*) echo "Invalid Option"; sleep 1; menu ;;
+esac
+}
 
-# Create service directory
-mkdir -p /usr/local/torrent-fox
+enable() {
+echo "Blocking torrent traffic..."
+iptables -F
+iptables -A INPUT -m string --algo bm --string "BitTorrent" -j DROP
+iptables -A INPUT -m string --algo bm --string "peer_id=" -j DROP
+iptables -A INPUT -m string --algo bm --string ".torrent" -j DROP
+iptables -A INPUT -m string --algo bm --string "announce" -j DROP
+iptables -A INPUT -m string --algo bm --string "info_hash" -j DROP
+echo "Torrent block enabled!"
+}
 
-# Copy program files
-git clone https://github.com/Torrent-Fox/Torrent-Fox.git /usr/local/torrent-fox
+disable() {
+echo "Removing torrent block..."
+iptables -F
+echo "Torrent block disabled!"
+}
 
-# Make monitor executable
-chmod +x /usr/local/torrent-fox/core/monitor.py
+status() {
+echo "Checking firewall rules..."
+iptables -L
+}
 
-# Copy and enable systemd service
-cp /usr/local/torrent-fox/service/torrent-fox.service /etc/systemd/system/
-
-systemctl daemon-reload
-systemctl enable torrent-fox
-systemctl start torrent-fox
-
-echo "Torrent-Fox Installed Successfully!"
+menu
